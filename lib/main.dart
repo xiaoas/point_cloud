@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
+import 'package:vector_math/vector_math.dart' show Vector3;
 
 void main() {
   runApp(MyApp());
@@ -32,11 +34,34 @@ class PointCloud extends StatefulWidget {
   State<StatefulWidget> createState() => _PointCloudState();
 }
 class _PointCloudState extends State<PointCloud> {
+  final points = <Vector3>[Vector3.zero(), Vector3.zero(), ];
+  // final viewpoint;
   @override
   Widget build(BuildContext context) {
-    return Container();
+    var random = Random();
+    return Stack(
+      children: points.map((coord) => Positioned(
+        left: random.nextInt(30).toDouble(),
+        top: random.nextInt(30).toDouble(),
+        child: Point(),
+      )).toList(),
+    );
   }
 }
+// defines a not yet positioned point
+class Point extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      IconData(57744, fontFamily: 'MaterialIcons'),
+      size: 36,
+    );
+  }
+
+}
+
+
+
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
