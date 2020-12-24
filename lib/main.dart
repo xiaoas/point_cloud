@@ -34,33 +34,82 @@ class PointCloud extends StatefulWidget {
   State<StatefulWidget> createState() => _PointCloudState();
 }
 class _PointCloudState extends State<PointCloud> {
-  final points = <Vector3>[Vector3.zero(), Vector3.zero(), ];
+  final points = <Vector3>[
+    Vector3.zero(),
+    Vector3(1, 2, 3),
+  ];
+
   // final viewpoint;
   @override
   Widget build(BuildContext context) {
     var random = Random();
     return Stack(
-      children: points.map((coord) => Positioned(
-        left: random.nextInt(30).toDouble(),
-        top: random.nextInt(30).toDouble(),
-        child: Point(),
-      )).toList(),
+      children: points
+          .map((coord) => Draggable(
+                child: Container(
+                  padding: EdgeInsets.only(top: coord.y, left: coord.x),
+                  child: Point(),
+                ),
+                feedback: Container(
+                  padding: EdgeInsets.only(top: coord.y, left: coord.x),
+                  child: Point(),
+                ),
+                childWhenDragging: Container(),
+                onDragCompleted: () {},
+                onDragEnd: (drag) {
+                  setState(() {
+                    // top[0] = top[0] + drag.offset.dy < 0 ? 0 : top[0] + drag.offset.dy;
+                    // left[0] = left[0] + drag.offset.dx < 0 ? 0 : left[0] + drag.offset.dx;
+                  });
+                },
+              ))
+          .toList(),
     );
   }
 }
-// defines a not yet positioned point
+// Positioned(
+// left: random.nextInt(30).toDouble(),
+// top: random.nextInt(30).toDouble(),
+// child: Point(),
+// )
+
 class Point extends StatelessWidget {
+  final int index;
+
+  Point({Key key, this.index}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
+    return Draggable(
+      child: Container(
+        padding: EdgeInsets.only(top: coord.y, left: coord.x),
+        child: Point(),
+      ),
+      feedback: Container(
+        padding: EdgeInsets.only(top: coord.y, left: coord.x),
+        child: Point(),
+      ),
+      childWhenDragging: Container(),
+      onDragCompleted: () {},
+      onDragEnd: (drag) {
+        setState(() {
+          // top[0] = top[0] + drag.offset.dy < 0 ? 0 : top[0] + drag.offset.dy;
+          // left[0] = left[0] + drag.offset.dx < 0 ? 0 : left[0] + drag.offset.dx;
+        });
+      },
+    );
+  }
+
+  Widget _buildDot() {
     return Icon(
       IconData(57744, fontFamily: 'MaterialIcons'),
       size: 36,
     );
   }
-
 }
 
 
+// following remain unused
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);

@@ -22,33 +22,58 @@ class Drag extends StatefulWidget {
 }
 
 class _DragState extends State<Drag> {
-  double top = 0;
-  double left = 0;
+  final top = <double>[0, 0];
+  final left = <double>[0, 0];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        child: Draggable(
-          child: Container(
-            padding: EdgeInsets.only(top: top, left: left),
-            child: DragItem(),
-          ),
-          feedback: Container(
-            padding: EdgeInsets.only(top: top, left: left),
-            child: DragItem(),
-          ),
-          childWhenDragging: Container(
-            padding: EdgeInsets.only(top: top, left: left),
-            child: DragItem(),
-          ),
-          onDragCompleted: () {},
-          onDragEnd: (drag) {
-            setState(() {
-              top = top + drag.offset.dy < 0 ? 0 : top + drag.offset.dy;
-              left = left + drag.offset.dx < 0 ? 0 : left + drag.offset.dx;
-            });
-          },
+        child: Stack(
+          children: [
+            Draggable(
+              child: Container(
+                padding: EdgeInsets.only(top: top[0], left: left[0]),
+                child: DragItem(),
+              ),
+              feedback: Container(
+                padding: EdgeInsets.only(top: top[0], left: left[0]),
+                child: DragItem(),
+              ),
+              childWhenDragging: Container(),
+              onDragCompleted: () {},
+              onDragEnd: (drag) {
+                setState(() {
+                  top[0] =
+                      top[0] + drag.offset.dy < 0 ? 0 : top[0] + drag.offset.dy;
+                  left[0] = left[0] + drag.offset.dx < 0
+                      ? 0
+                      : left[0] + drag.offset.dx;
+                });
+              },
+            ),
+            Draggable(
+              child: Container(
+                padding: EdgeInsets.only(top: top[1], left: left[1]),
+                child: DragItem(),
+              ),
+              feedback: Container(
+                padding: EdgeInsets.only(top: top[1], left: left[1]),
+                child: DragItem(),
+              ),
+              childWhenDragging: Container(),
+              onDragCompleted: () {},
+              onDragEnd: (drag) {
+                setState(() {
+                  top[1] =
+                      top[1] + drag.offset.dy < 0 ? 0 : top[1] + drag.offset.dy;
+                  left[1] = left[1] + drag.offset.dx < 0
+                      ? 0
+                      : left[1] + drag.offset.dx;
+                });
+              },
+            ),
+          ],
         ),
       ),
     );
