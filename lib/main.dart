@@ -44,27 +44,32 @@ class _PointCloudState extends State<PointCloud> {
   Widget build(BuildContext context) {
     var random = Random();
     return Stack(
-      children: points
-          .map((coord) => Draggable(
-                child: Container(
-                  padding: EdgeInsets.only(top: coord.y, left: coord.x),
-                  child: Point(),
-                ),
-                feedback: Container(
-                  padding: EdgeInsets.only(top: coord.y, left: coord.x),
-                  child: Point(),
-                ),
-                childWhenDragging: Container(),
-                onDragCompleted: () {},
-                onDragEnd: (drag) {
-                  setState(() {
-                    // top[0] = top[0] + drag.offset.dy < 0 ? 0 : top[0] + drag.offset.dy;
-                    // left[0] = left[0] + drag.offset.dx < 0 ? 0 : left[0] + drag.offset.dx;
-                  });
-                },
-              ))
-          .toList(),
-    );
+        children: List<Widget>.generate(
+            points.length,
+            (int index) => Draggable(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                        top: points[index].y, left: points[index].x),
+                    child: Point(),
+                  ),
+                  feedback: Container(
+                    padding: EdgeInsets.only(
+                        top: points[index].y, left: points[index].x),
+                    child: Point(),
+                  ),
+                  childWhenDragging: Container(),
+                  onDragCompleted: () {},
+                  onDragEnd: (drag) {
+                    setState(() {
+                      RenderBox renderBox = context.findRenderObject();
+                      final offset = renderBox.globalToLocal(drag.offset);
+                      points[index].y += offset.dy;
+                      points[index].x += offset.dx;
+                      // top[index] = top[index] + drag.offset.dy < 0 ? 0 : top[index] + drag.offset.dy;
+                      // left[index] = left[index] + drag.offset.dx < 0 ? 0 : left[index] + drag.offset.dx;
+                    });
+                  },
+                )));
   }
 }
 // Positioned(
@@ -80,23 +85,9 @@ class Point extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Draggable(
-      child: Container(
-        padding: EdgeInsets.only(top: coord.y, left: coord.x),
-        child: Point(),
-      ),
-      feedback: Container(
-        padding: EdgeInsets.only(top: coord.y, left: coord.x),
-        child: Point(),
-      ),
-      childWhenDragging: Container(),
-      onDragCompleted: () {},
-      onDragEnd: (drag) {
-        setState(() {
-          // top[0] = top[0] + drag.offset.dy < 0 ? 0 : top[0] + drag.offset.dy;
-          // left[0] = left[0] + drag.offset.dx < 0 ? 0 : left[0] + drag.offset.dx;
-        });
-      },
+    return Icon(
+      IconData(57744, fontFamily: 'MaterialIcons'),
+      size: 36,
     );
   }
 
