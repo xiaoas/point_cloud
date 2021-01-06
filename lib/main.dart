@@ -1,9 +1,19 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:vector_math/vector_math.dart' show Vector3;
+import 'package:provider/provider.dart';
+import 'models/cloud.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CloudModel(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -11,21 +21,91 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      // theme: ThemeData(
-      //   visualDensity: VisualDensity.adaptivePlatformDensity,
-      // ),
-      home: Scaffold(
-        appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: Text('test'),
-        ),
-        body: PointCloud(),
-      )
+        title: 'Flutter Demo',
+        // theme: ThemeData(
+        //   visualDensity: VisualDensity.adaptivePlatformDensity,
+        // ),
+        home: Scaffold(
+          appBar: AppBar(
+            // Here we take the value from the MyHomePage object that was created by
+            // the App.build method, and use it to set our appbar title.
+            title: Text('test'),
+          ),
+          body: Column(children: [
+            Flexible(
+              flex: 1,
+              child: AspectRatio(aspectRatio: 1, child: PointCloud()),
+            ),
+            Divider(),
+            Flexible(
+              flex: 1,
+              child: AspectRatio(aspectRatio: 1, child: Consumer<CloudModel>(
+                builder: (context, cloud, child) {
+                  final cloudData = jsonEncode(
+                      cloud.points.map((Vector3 vec) => [vec.x, vec.y, vec.z])
+                          .toList(growable: false));
+                  return FutureBuilder(
+                    // future: http.get('http://10.0.2.2:8888'),
+                    future: http.post('http://10.0.2.2:8888',
+                        headers: <String, String>{
+                          'Content-Type': 'application/json; charset=UTF-8',
+                        },
+                        body: cloudData
+                    ),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return Image.memory(snapshot.data.bodyBytes);
+                      } else if (snapshot.hasError) {
+                        return Text("${snapshot.error}");
+                      }
+
+                      return CircularProgressIndicator();
+                    },
+                  );
+                  // return Text(cloud.points[0].xyz.toString());
+                }
+                ,)
+              ),
+            )
+          ]),
+          drawer: Drawer(
+            child: ListView(
+              // padding: EdgeInsets.zero,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Point Cloud',
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .headline6,
+                  ),
+                ),
+                Divider(),
+                ListTile(
+                  leading: Icon(Icons.label),
+                  title: Text('points view'),
+                ),
+              ],
+            ),
+          ),
+        )
     );
   }
 }
+
+// class PointCloudImage extends StatefulWidget {
+//   @override
+//   _PointCloudImageState createState() => _PointCloudImageState();
+// }
+//
+// class _PointCloudImageState extends State<PointCloudImage> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Text(key.currentState.points[0].xyz.toString());
+//   }
+// }
 
 class PointCloud extends StatefulWidget {
   PointCloud({Key key}) : super(key: key);
@@ -33,43 +113,53 @@ class PointCloud extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _PointCloudState();
 }
+
 class _PointCloudState extends State<PointCloud> {
-  final points = <Vector3>[
-    Vector3.zero(),
-    Vector3(1, 2, 3),
-  ];
 
   // final viewpoint;
   @override
   Widget build(BuildContext context) {
     var random = Random();
-    return Stack(
-        children: List<Widget>.generate(
-            points.length,
-            (int index) => Draggable(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                        top: points[index].y, left: points[index].x),
-                    child: Point(),
-                  ),
-                  feedback: Container(
-                    padding: EdgeInsets.only(
-                        top: points[index].y, left: points[index].x),
-                    child: Point(),
-                  ),
-                  childWhenDragging: Container(),
-                  onDragCompleted: () {},
-                  onDragEnd: (drag) {
-                    setState(() {
-                      RenderBox renderBox = context.findRenderObject();
-                      final offset = renderBox.globalToLocal(drag.offset);
-                      points[index].y += offset.dy;
-                      points[index].x += offset.dx;
-                      // top[index] = top[index] + drag.offset.dy < 0 ? 0 : top[index] + drag.offset.dy;
-                      // left[index] = left[index] + drag.offset.dx < 0 ? 0 : left[index] + drag.offset.dx;
-                    });
-                  },
-                )));
+    return Consumer<CloudModel>(
+        builder: (context, cloud, child) {
+          final points = cloud.points;
+          return Stack(
+              children: List<Widget>.generate(
+                  points.length,
+                      (int index) =>
+                      Draggable(
+                        child: Container(
+                          padding: EdgeInsets.only(
+                              top: points[index].y, left: points[index].x),
+                          child: Point(),
+                        ),
+                        feedback: Container(
+                          padding: EdgeInsets.only(
+                              top: points[index].y, left: points[index].x),
+                          child: Point(),
+                        ),
+                        childWhenDragging: Container(),
+                        onDragCompleted: () {},
+                        onDragEnd: (drag) {
+                          RenderBox renderBox = context.findRenderObject();
+                          final offset = renderBox.globalToLocal(drag.offset);
+                          if (offset.dx == 0 && offset.dy == 0) {
+                            print("tapped");
+                            return;
+                          }
+                          points[index].y += offset.dy;
+                          points[index].y =
+                          points[index].y > 0 ? points[index].y : 0;
+                          points[index].x += offset.dx;
+                          points[index].x =
+                          points[index].x > 0 ? points[index].x : 0;
+                          // top[index] = top[index] + drag.offset.dy < 0 ? 0 : top[index] + drag.offset.dy;
+                          // left[index] = left[index] + drag.offset.dx < 0 ? 0 : left[index] + drag.offset.dx;
+                          cloud.notifyListeners();
+                        },
+                      )));
+        }
+    );
   }
 }
 // Positioned(
@@ -86,7 +176,7 @@ class Point extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Icon(
-      IconData(57744, fontFamily: 'MaterialIcons'),
+      Icons.add_circle_outline,
       size: 36,
     );
   }
@@ -95,75 +185,6 @@ class Point extends StatelessWidget {
     return Icon(
       IconData(57744, fontFamily: 'MaterialIcons'),
       size: 36,
-    );
-  }
-}
-
-
-// following remain unused
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Column(children: [
-        Flexible(
-          flex: 1,
-          child: AspectRatio(aspectRatio: 1, child: Placeholder()),
-        ),
-        Divider(),
-        Flexible(
-          flex: 1,
-          child: AspectRatio(aspectRatio: 1, child: Placeholder()),
-        )
-      ]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
