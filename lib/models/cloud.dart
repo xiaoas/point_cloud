@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math.dart' show Vector3;
 
 class CloudModel extends ChangeNotifier {
-  final List<Vector3> points = [
+  List<Vector3> points = [
     Vector3.zero(),
     Vector3(8, 20, 30),
     Vector3(30, 5, 0),
@@ -12,4 +12,8 @@ class CloudModel extends ChangeNotifier {
     Vector3(30, 29, 13),
     Vector3(36, 51, 41),
   ];
+}
+
+class CheckPointModel extends ChangeNotifier {
+  final Map<String, List<Vector3>> checkpoints = {};
 }
