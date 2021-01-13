@@ -49,56 +49,73 @@ class _DataState extends State<DataScreen> {
                   onTap: () {
                     showDialog(
                       context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text('Point Edit'),
-                        content: Form(
-                          // key: _formKey,
-                          child: Row(
-                            // crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              ...axes
-                                  .map((axName) => Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8.0),
-                                          child: TextFormField(
-                                            decoration: const InputDecoration(
-                                              hintText: 'coord',
+                      builder: (context) => Form(
+                        child: Builder(
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Text('Point Edit'),
+                              content: Row(
+                                // crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  ...axes
+                                      .map((axName) => Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8.0),
+                                              child: TextFormField(
+                                                decoration:
+                                                    const InputDecoration(
+                                                  hintText: 'coord',
+                                                ),
+                                                validator: (value) {
+                                                  if (value.isEmpty) {
+                                                    return "Please specify Point $axName value";
+                                                  }
+                                                  if (double.tryParse(value) ==
+                                                      null) {
+                                                    return "Invalid double value'$value'";
+                                                  }
+                                                  return null;
+                                                },
+                                                controller:
+                                                    myController[axName],
+                                              ),
                                             ),
-                                            validator: (value) {
-                                              if (value.isEmpty) {
-                                                return "Please specify Point $axName value";
-                                              }
-                                              if (double.tryParse(value) ==
-                                                  null) {
-                                                return "Invalid double value'$value'";
-                                              }
-                                              return null;
-                                            },
-                                            controller: myController[axName],
-                                          ),
-                                        ),
-                                      ))
-                                  .toList(),
-                            ],
-                          ),
+                                          ))
+                                      .toList(),
+                                ],
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('OK'),
+                                  onPressed: () {
+                                    if (Form.of(context).validate()) {
+                                      Navigator.of(context).pop();
+                                      final xyz = axes.map((axstr) {
+                                        final controller = myController[axstr];
+                                        final value =
+                                            double.parse(controller.text);
+                                        controller.clear();
+                                        return value;
+                                      }).toList();
+                                      final newvec =
+                                          Vector3(xyz[0], xyz[1], xyz[2]);
+                                      points[points.indexOf(point)] = newvec;
+                                      cloudModel.notifyListeners();
+                                    }
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        actions: <Widget>[
-                          TextButton(
-                            child: Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          TextButton(
-                            child: Text('OK'),
-                            onPressed: () {
-                              if (Form.of(context).validate()) {
-                                Navigator.of(context).pop();
-                              }
-                            },
-                          ),
-                        ],
                       ),
                     );
                   },

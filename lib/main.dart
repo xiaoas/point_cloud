@@ -9,6 +9,8 @@ import 'package:http/http.dart' as http;
 import 'checkpoint.dart';
 import 'data.dart';
 
+final serverURI = 'http://127.0.0.1:8888';
+
 void main() {
   runApp(MultiProvider(
     providers: [
@@ -65,7 +67,7 @@ class MyApp extends StatelessWidget {
                                   .toList(growable: false));
                               return FutureBuilder(
                                 // future: http.get('http://10.0.2.2:8888'),
-                                future: http.post('http://10.0.2.2:8888',
+                                future: http.post(serverURI,
                                     headers: <String, String>{
                                       'Content-Type':
                                           'application/json; charset=UTF-8',
