@@ -46,13 +46,62 @@ class _DataState extends State<DataScreen> {
                     point.toString(),
                     // style: _biggerFont,
                   ),
-                  // onLongPress: () {
-                  //   Provider.of<CloudModel>(context, listen: false).points = entry.value;
-                  //   Provider.of<CloudModel>(context, listen: false).notifyListeners();
-                  //   Scaffold.of(context).showSnackBar(SnackBar(
-                  //       content: Text("Check Point '${entry.key}' loaded.")
-                  //   ));
-                  // },
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Point Edit'),
+                        content: Form(
+                          // key: _formKey,
+                          child: Row(
+                            // crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              ...axes
+                                  .map((axName) => Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8.0),
+                                          child: TextFormField(
+                                            decoration: const InputDecoration(
+                                              hintText: 'coord',
+                                            ),
+                                            validator: (value) {
+                                              if (value.isEmpty) {
+                                                return "Please specify Point $axName value";
+                                              }
+                                              if (double.tryParse(value) ==
+                                                  null) {
+                                                return "Invalid double value'$value'";
+                                              }
+                                              return null;
+                                            },
+                                            controller: myController[axName],
+                                          ),
+                                        ),
+                                      ))
+                                  .toList(),
+                            ],
+                          ),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text('Cancel'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                            child: Text('OK'),
+                            onPressed: () {
+                              if (Form.of(context).validate()) {
+                                Navigator.of(context).pop();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ));
           final divided =
@@ -76,8 +125,12 @@ class _DataState extends State<DataScreen> {
                                 if (value.isEmpty) {
                                   return "Please specify Point $axName value";
                                 }
+                                if (double.tryParse(value) == null) {
+                                  return "Invalid double value'$value'";
+                                }
                                 return null;
                               },
+
                               controller: myController[axName],
                             ),
                           ),
@@ -91,8 +144,12 @@ class _DataState extends State<DataScreen> {
                       // the form is invalid.
                       if (_formKey.currentState.validate()) {
                         final xyz = axes
-                            .map((axstr) =>
-                                double.parse(myController[axstr].text))
+                            .map((axstr) {
+                          final controller = myController[axstr];
+                          final value = double.parse(controller.text);
+                          controller.clear();
+                          return value;
+                        })
                             .toList();
                         points.add(Vector3(xyz[0], xyz[1], xyz[2]));
                         cloudModel.notifyListeners();
